@@ -1,3 +1,4 @@
+import "./live-number";
 import "@fontsource/roboto/latin-400.css";
 import "@fontsource/roboto/latin-500.css";
 import { html, render, nothing } from "lit";
@@ -16,6 +17,8 @@ import {
 import { api, ApiError, LiveClient } from "./api";
 import {
   bytes,
+  capacity,
+  aggregate,
   duration,
   percent,
   normalizeReport,
@@ -87,7 +90,12 @@ const flag = (region?: string) =>
         .toUpperCase()
         .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
     : "";
-const pct = (n: number) => `${number(n).toFixed(1)}%`;
+const pct = (n: number | undefined) => (n == null ? "—" : `${n.toFixed(1)}%`);
+const rate = (n: number | undefined) => (n == null ? "—" : bytes(n) + "/s");
+const liveValue = (n: number | undefined, format = rate) =>
+  html`<live-number .value=${n} .format=${format}></live-number>`;
+let motionDirection = 0;
+let renderedView = "";
 const failure = (e: unknown) =>
   e instanceof Error ? e.message : "请求失败，请重试";
 function apply() {
@@ -127,15 +135,18 @@ document.addEventListener("visibilitychange", () => {
   } else if (!error && !loading) live?.start();
 });
 function openNode(id: string) {
+  motionDirection = 1;
   location.hash = encodeURIComponent(id);
 }
 function overview() {
+  motionDirection = -1;
   if (location.hash) location.hash = "";
   selected = "";
   page = "overview";
   draw();
 }
 function preferences() {
+  motionDirection = 1;
   selected = "";
   if (location.hash)
     history.replaceState(null, "", location.pathname + location.search);
@@ -230,16 +241,21 @@ function stat(label: string, value: unknown, sub: string) {
 }
 function meter(label: string, value: number | undefined, detail: string) {
   return html`<div class="meter">
-    <div>
-      <span>${label}</span><span>${value == null ? "—" : pct(value)}</span>
-    </div>
-    <progress
-      max="1"
+    <div><span>${label}</span><span>${liveValue(value, pct)}</span></div>
+    <div
+      class="usage-track ${value != null && value > 90 ? "critical" : ""}"
+      role="progressbar"
       aria-label=${`${label}使用率`}
-      .value=${value == null ? 0 : Math.max(0, Math.min(1, value / 100))}
-      class=${value != null && value > 90 ? "critical" : ""}
-    ></progress
-    ><small>${detail}</small>
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow=${value == null ? nothing : value}
+      aria-valuetext=${value == null ? "暂无上报" : pct(value)}
+    >
+      <span
+        style=${`transform:scaleX(${value == null ? 0 : Math.max(0, Math.min(1, value / 100))})`}
+      ></span>
+    </div>
+    <small>${detail}</small>
   </div>`;
 }
 function nodeCard(n: NodeInfo) {
@@ -267,16 +283,16 @@ function nodeCard(n: NodeInfo) {
       内存${n.arch ? ` · ${n.arch}` : ""}
     </p>
     <div class="meters">
-      ${meter("CPU", show ? r.cpu : undefined, n.cpu_name || "处理器")}${meter("内存", show && ramTotal ? percent(r.ram, ramTotal) : undefined, `${show ? bytes(r.ram) : "—"} / ${bytes(ramTotal)}`)}${meter("磁盘", show && diskTotal ? percent(r.disk, diskTotal) : undefined, `${show ? bytes(r.disk) : "—"} / ${bytes(diskTotal)}`)}
+      ${meter("CPU", show ? r.cpu : undefined, n.cpu_cores ? `${n.cpu_cores} 核心` : "处理器")}${meter("内存", show && ramTotal && r.ram != null ? percent(r.ram, ramTotal) : undefined, capacity(show ? r.ram : undefined, ramTotal))}${meter("磁盘", show && diskTotal && r.disk != null ? percent(r.disk, diskTotal) : undefined, capacity(show ? r.disk : undefined, diskTotal))}
     </div>
     <div class="network">
       <span
         >${icon("down")}<span
-          ><small>下载</small>${show ? bytes(r.net_in) + "/s" : "—"}</span
+          ><small>下载</small>${liveValue(show ? r.net_in : undefined)}</span
         ></span
       ><span
         >${icon("up")}<span
-          ><small>上传</small>${show ? bytes(r.net_out) + "/s" : "—"}</span
+          ><small>上传</small>${liveValue(show ? r.net_out : undefined)}</span
         ></span
       >
     </div>
@@ -326,7 +342,45 @@ function overviewContent() {
       </button>
     </div>
     <section class="summary" aria-label="节点统计">
-      ${stat("在线节点", connected ? `${active.length} / ${nodes.length}` : "—", connected ? `${nodes.length - active.length} 个离线` : "等待实时连接")}${stat("平均 CPU", connected && active.length ? pct(active.reduce((s, n) => s + (reports[n.uuid]?.cpu || 0), 0) / active.length) : "—", "在线节点使用率")}${stat("总下载", connected ? bytes(active.reduce((s, n) => s + (reports[n.uuid]?.net_in || 0), 0)) + "/s" : "—", "实时入站速率")}${stat("总上传", connected ? bytes(active.reduce((s, n) => s + (reports[n.uuid]?.net_out || 0), 0)) + "/s" : "—", "实时出站速率")}
+      ${stat("在线节点", connected ? `${active.length} / ${nodes.length}` : "—", connected ? `${nodes.length - active.length} 个离线` : "等待实时连接")}${stat(
+        "平均 CPU",
+        connected && active.length
+          ? liveValue(
+              aggregate(
+                reports,
+                active.map((n) => n.uuid),
+                "cpu",
+                true,
+              ),
+              pct,
+            )
+          : "—",
+        "在线节点使用率",
+      )}${stat(
+        "总下载",
+        connected
+          ? liveValue(
+              aggregate(
+                reports,
+                active.map((n) => n.uuid),
+                "net_in",
+              ),
+            )
+          : "—",
+        "实时入站速率",
+      )}${stat(
+        "总上传",
+        connected
+          ? liveValue(
+              aggregate(
+                reports,
+                active.map((n) => n.uuid),
+                "net_out",
+              ),
+            )
+          : "—",
+        "实时出站速率",
+      )}
     </section>
     <div class="list-toolbar">
       <label class="field search"
@@ -495,7 +549,7 @@ function detailContent(n: NodeInfo) {
       </select>
     </div>
     <section class="summary">
-      ${stat("CPU", on && r ? pct(r.cpu) : "—", n.cpu_name || "处理器")}${stat("内存", on && r ? bytes(r.ram) : "—", `${bytes(n.mem_total)} 总容量`)}${stat("运行时间", on && r ? duration(r.uptime) : "—", "自最近一次启动")}${stat("负载", on && r ? String(r.load) : "—", "1 分钟平均负载")}
+      ${stat("CPU", on && r ? pct(r.cpu) : "—", n.cpu_name || "处理器")}${stat("内存", on && r ? bytes(r.ram) : "—", `${bytes(n.mem_total)} 总容量`)}${stat("运行时间", on && r ? duration(r.uptime) : "—", "自最近一次启动")}${stat("负载", on && r ? (r.load == null ? "—" : r.load.toFixed(2)) : "—", "1 分钟平均负载")}
     </section>
     <section class="specs">
       <h2>节点信息</h2>
@@ -591,7 +645,7 @@ function settingsContent() {
       <div class="preference-row">
         <div>
           <h2>主题版本</h2>
-          <p>Komari Neumorph · 0.2.0</p>
+          <p>Komari Neumorph · 0.2.1</p>
         </div>
         <a
           class="text-button"
@@ -657,6 +711,11 @@ async function submitLogin(e: Event) {
 }
 function draw() {
   const n = current();
+  const view = page + ":" + selected;
+  const direction = motionDirection;
+  const animate = !!renderedView && view !== renderedView && direction !== 0;
+  renderedView = view;
+  motionDirection = 0;
   render(
     html`<a
         class="skip-link"
@@ -738,19 +797,22 @@ function draw() {
                           : overviewContent()
                   }`
           }
-          <footer class="km-footer">
-            <a
-              href="https://github.com/komari-monitor/komari"
-              target="_blank"
-              rel="noopener"
-              >Powered by Komari Monitor.</a
-            ><span>Neumorph · Rainy-C</span>
-          </footer>
         </main>
       </div>
       ${login()}`,
     app,
   );
+  if (animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const main = document.getElementById("main");
+    main?.getAnimations().forEach((a) => a.cancel());
+    main?.animate(
+      [
+        { opacity: 0.5, transform: `translateX(${direction * 10}px)` },
+        { opacity: 1, transform: "translateX(0)" },
+      ],
+      { duration: 220, easing: "cubic-bezier(.22,1,.36,1)" },
+    );
+  }
   queueMicrotask(drawCharts);
 }
 function drawCharts() {

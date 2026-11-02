@@ -33,3 +33,24 @@ test("online membership is independent of a last known report", () => {
   assert.equal(result.reports.b.cpu, 20);
   assert.throws(() => unpackLive({ status: "error" }));
 });
+
+test("missing readings remain unknown and are excluded from aggregate CPU", async () => {
+  const { aggregate, capacity } = await import("../src/model.mjs");
+  const missing = normalizeReport({ cpu: {}, network: { up: 0 } });
+  assert.equal(missing.cpu, undefined);
+  assert.equal(missing.net_in, undefined);
+  assert.equal(missing.net_out, 0);
+  assert.equal(
+    aggregate(
+      { a: { cpu: 0 }, b: {}, c: { cpu: 60 } },
+      ["a", "b", "c"],
+      "cpu",
+      true,
+    ),
+    30,
+  );
+  assert.equal(aggregate({ a: {} }, ["a"], "net_in"), undefined);
+  assert.equal(capacity(1024 ** 3, 4 * 1024 ** 3), "1 / 4 GiB");
+  assert.equal(bytes(0.5), "1 B");
+  assert.equal(bytes(-1), "—");
+});

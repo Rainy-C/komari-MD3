@@ -159,6 +159,8 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
   await expect(page.locator(".node-card")).toHaveCount(3);
   await expect(page.locator(".navigation")).toHaveCount(0);
   await expect(page.locator(".online")).toHaveCount(2);
+  expect(await page.locator('.node-card').first().locator('.usage-track > span').first().evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).a)).toBeCloseTo(.24,2);
+  expect(await page.locator('.node-card').last().locator('.usage-track > span').first().evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).a)).toBe(0);
   await page.screenshot({
     path: info.outputPath("desktop-light.png"),
     fullPage: true,
@@ -265,3 +267,36 @@ for (const mode of ["empty", "error", "disconnect"])
     else
       await expect(page.getByRole("alert")).toContainText("Test unavailable");
   });
+
+test("footer removed and live numbers retarget smoothly with reduced-motion fallback", async ({
+  page,
+}) => {
+  await setup(page);
+  await expect(page.locator("footer,.km-footer")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    const el = document.createElement("live-number") as HTMLElement & {
+      value: number;
+      format: (n: number) => string;
+    };
+    el.id = "motion-probe";
+    el.format = (n) => n.toFixed(0);
+    el.value = 0;
+    document.body.append(el);
+  });
+  await expect(page.locator("#motion-probe")).toHaveText("0");
+  await page.evaluate(() => {
+    (
+      document.getElementById("motion-probe") as HTMLElement & { value: number }
+    ).value = 100;
+  });
+  await expect(page.locator("#motion-probe")).toHaveText("100");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.evaluate(() => {
+    (
+      document.getElementById("motion-probe") as HTMLElement & { value: number }
+    ).value = 25;
+  });
+  await expect(page.locator("#motion-probe")).toHaveText("25");
+  await page.locator("#motion-probe").evaluate((el) => el.remove());
+});

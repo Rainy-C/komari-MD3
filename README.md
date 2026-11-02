@@ -16,7 +16,7 @@
 
 1. 打开本仓库 **Actions → Build Neumorph theme**，选择最近成功的一次运行。
 2. 下载 **komari-Neumorph-installable**，解压外层工作流产物包。
-3. 在 Komari 后台主题管理中上传里面的 **komari-Neumorph-v0.2.0.zip** 并启用。
+3. 在 Komari 后台主题管理中上传里面的 **komari-Neumorph-v0.2.1.zip** 并启用。
 
 主题 ZIP 根目录直接包含 `komari-theme.json` 与 `dist/`。请勿上传 GitHub 自动生成的源码 ZIP 或外层 Actions 产物 ZIP。
 
@@ -49,6 +49,6 @@ TypeScript · Lit · Vite · 原生 HTML 控件 · Chart.js
 - [Komari](https://github.com/komari-monitor/komari)
 - [主题开发文档](https://www.komari.wiki/dev/theme)
 
-Powered by Komari Monitor.
+
 
 为兼容已有安装和后台主题设置，内部主题标识继续使用 `MD3`；界面与组件实现已经切换为新拟态。

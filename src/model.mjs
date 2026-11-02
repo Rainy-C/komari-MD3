@@ -5,8 +5,12 @@ export const percent = (used, total) =>
     : 0;
 export function bytes(value) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  const n = Math.max(0, number(value));
-  const i = n > 0 ? Math.min(4, Math.floor(Math.log(n) / Math.log(1024))) : 0;
+  if (Number(value) < 0) return "—";
+  const n = number(value);
+  const i =
+    n > 0
+      ? Math.max(0, Math.min(4, Math.floor(Math.log(n) / Math.log(1024))))
+      : 0;
   return `${(n / 1024 ** i).toFixed(i ? 1 : 0)} ${["B", "KiB", "MiB", "GiB", "TiB"][i]}`;
 }
 export function duration(seconds) {
@@ -20,18 +24,18 @@ export function duration(seconds) {
 }
 export function normalizeReport(raw = {}) {
   return {
-    cpu: number(raw.cpu?.usage ?? raw.cpu),
-    ram: number(raw.ram?.used ?? raw.ram),
-    ram_total: number(raw.ram?.total ?? raw.ram_total),
-    disk: number(raw.disk?.used ?? raw.disk),
-    disk_total: number(raw.disk?.total ?? raw.disk_total),
-    net_in: number(raw.network?.down ?? raw.net_in),
-    net_out: number(raw.network?.up ?? raw.net_out),
-    net_total_up: number(raw.network?.totalUp ?? raw.net_total_up),
-    net_total_down: number(raw.network?.totalDown ?? raw.net_total_down),
+    cpu: reading(raw.cpu?.usage ?? raw.cpu),
+    ram: reading(raw.ram?.used ?? raw.ram),
+    ram_total: reading(raw.ram?.total ?? raw.ram_total),
+    disk: reading(raw.disk?.used ?? raw.disk),
+    disk_total: reading(raw.disk?.total ?? raw.disk_total),
+    net_in: reading(raw.network?.down ?? raw.net_in),
+    net_out: reading(raw.network?.up ?? raw.net_out),
+    net_total_up: reading(raw.network?.totalUp ?? raw.net_total_up),
+    net_total_down: reading(raw.network?.totalDown ?? raw.net_total_down),
     uptime: raw.uptime,
-    load: number(raw.load?.load1 ?? raw.load),
-    process: number(raw.process),
+    load: reading(raw.load?.load1 ?? raw.load),
+    process: reading(raw.process),
     time: raw.updated_at ?? raw.time,
   };
 }
@@ -53,4 +57,33 @@ export function unpackLive(message) {
       ]),
     ),
   };
+}
+
+export function reading(value) {
+  return value !== null &&
+    value !== undefined &&
+    value !== "" &&
+    typeof value !== "object" &&
+    Number.isFinite(Number(value)) &&
+    Number(value) >= 0
+    ? Number(value)
+    : undefined;
+}
+export function capacity(used, total) {
+  if (reading(total) == null || total <= 0) return "—";
+  const i = Math.max(
+    0,
+    Math.min(4, Math.floor(Math.log(total) / Math.log(1024))),
+  );
+  const unit = ["B", "KiB", "MiB", "GiB", "TiB"][i];
+  const format = (n) => (n / 1024 ** i).toFixed(i ? 1 : 0).replace(/\.0$/, "");
+  return `${reading(used) == null ? "—" : format(used)} / ${format(total)} ${unit}`;
+}
+export function aggregate(reports, ids, key, mean = false) {
+  const values = ids
+    .map((id) => reports[id]?.[key])
+    .filter((v) => reading(v) != null);
+  return values.length
+    ? values.reduce((a, b) => a + b, 0) / (mean ? values.length : 1)
+    : undefined;
 }

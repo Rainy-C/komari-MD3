@@ -18,18 +18,18 @@ export interface NodeInfo {
   expired_at?: string;
 }
 export interface Report {
-  cpu: number;
-  ram: number;
-  ram_total: number;
-  disk: number;
-  disk_total: number;
-  net_in: number;
-  net_out: number;
-  net_total_up: number;
-  net_total_down: number;
-  uptime?: number;
-  load: number;
-  process: number;
+  cpu: number | undefined;
+  ram: number | undefined;
+  ram_total: number | undefined;
+  disk: number | undefined;
+  disk_total: number | undefined;
+  net_in: number | undefined;
+  net_out: number | undefined;
+  net_total_up: number | undefined;
+  net_total_down: number | undefined;
+  uptime?: number | undefined;
+  load: number | undefined;
+  process: number | undefined;
   time?: string;
 }
 export interface Settings {
