@@ -1,0 +1,15 @@
+{
+  "name":{"zh-CN":"Komari · Material Design 3","en":"Komari · Material Design 3"},
+  "short":"MD3","description":{"zh-CN":"基于 Google 官方 Material Web 组件的 Material Design 3 监控主题","en":"A Material Design 3 monitor theme built with Google's Material Web components"},
+  "version":"0.1.0","author":"Rainy-C","url":"https://github.com/Rainy-C/komari-MD3",
+  "configuration":{"type":"managed","icon":"Palette","name":"MD3 主题设置","data":[
+    {"name":"外观与内容","type":"title"},
+    {"key":"seed_color","name":"主题种子色","type":"string","default":"#6750A4","help":"十六进制颜色，例如 #6750A4。使用 Material Color Utilities 生成完整明暗色板。"},
+    {"key":"headline","name":"首页标题","type":"string","default":"服务器概览"},
+    {"key":"description","name":"首页说明","type":"string","default":"所有节点的运行状态，尽在一处。"},
+    {"key":"default_appearance","name":"默认外观","type":"select","options":"system,light,dark","default":"system"},
+    {"key":"show_traffic","name":"显示累计流量","type":"switch","default":true},
+    {"key":"show_uptime","name":"显示运行时间","type":"switch","default":true},
+    {"key":"refresh_seconds","name":"实时刷新间隔（秒）","type":"number","default":3,"help":"有效范围 2–30 秒"}
+  ]}
+}
