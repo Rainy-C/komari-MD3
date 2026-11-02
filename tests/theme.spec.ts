@@ -163,9 +163,7 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
     path: info.outputPath("desktop-light.png"),
     fullPage: true,
   });
-  const search = page
-    .locator("md-outlined-text-field.search")
-    .getByRole("searchbox");
+  const search = page.locator(".search").getByRole("searchbox");
   await search.fill("Tokyo");
   await expect(page.locator(".node-card")).toHaveCount(1);
   await search.fill("");
@@ -213,7 +211,10 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
 test("WCAG light and dark", async ({ page }, info) => {
   await setup(page);
   for (const mode of ["light", "dark"]) {
-    await page.setViewportSize({width:mode==="light"?1280:390,height:900});
+    await page.setViewportSize({
+      width: mode === "light" ? 1280 : 390,
+      height: 900,
+    });
     await page.getByRole("button", { name: "外观设置", exact: true }).click();
     await page
       .getByRole("button", {
@@ -237,7 +238,7 @@ test("private site login submits Material text field form values", async ({
 }) => {
   await setup(page, "private");
   await page.getByRole("button", { name: "登录", exact: true }).last().click();
-  const dialog = page.locator("md-dialog");
+  const dialog = page.locator("dialog");
   await expect(dialog).toBeVisible();
   await dialog
     .getByRole("textbox", { name: "用户名", exact: true })

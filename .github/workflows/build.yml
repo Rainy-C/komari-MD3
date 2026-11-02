@@ -1,4 +1,4 @@
-name: Build MD3 theme
+name: Build Neumorph theme
 on:
   push:
     branches: [main]
@@ -24,7 +24,7 @@ jobs:
       - run: npx playwright test
       - uses: actions/upload-artifact@v4
         with:
-          name: komari-MD3-installable
+          name: komari-Neumorph-installable
           path: release/*
           if-no-files-found: error
           retention-days: 90
@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: komari-MD3-installable
+          name: komari-Neumorph-installable
           path: release
       - uses: softprops/action-gh-release@v2
         with:

@@ -1,18 +1,3 @@
-import "@material/web/button/filled-button.js";
-import "@material/web/button/filled-tonal-button.js";
-import "@material/web/button/outlined-button.js";
-import "@material/web/button/text-button.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/textfield/outlined-text-field.js";
-import "@material/web/progress/linear-progress.js";
-import "@material/web/progress/circular-progress.js";
-import "@material/web/chips/chip-set.js";
-import "@material/web/chips/filter-chip.js";
-import "@material/web/select/outlined-select.js";
-import "@material/web/select/select-option.js";
-import "@material/web/dialog/dialog.js";
-import "@material/web/ripple/ripple.js";
-import type { MdDialog } from "@material/web/dialog/dialog.js";
 import "@fontsource/roboto/latin-400.css";
 import "@fontsource/roboto/latin-500.css";
 import { html, render, nothing } from "lit";
@@ -64,7 +49,7 @@ let nodes: NodeInfo[] = [],
   online = new Set<string>();
 let settings: Settings = {},
   appearance = stored("appearance") || "system",
-  seed = "#6750A4";
+  seed = "#446b9e";
 let booting = false;
 let loading = true,
   error = "",
@@ -161,10 +146,10 @@ function setLogin(open: boolean) {
   loginOpen = open;
   loginError = "";
   draw();
-  const dialog = document.querySelector<MdDialog>("#login");
+  const dialog = document.querySelector<HTMLDialogElement>("#login");
   if (open) {
     loginFocus = document.activeElement as HTMLElement;
-    void dialog?.show();
+    dialog?.showModal();
   } else {
     dialog?.close();
     loginFocus?.focus();
@@ -186,7 +171,7 @@ async function boot() {
         : {}
     ) as Settings;
     seed =
-      typeof settings.seed_color === "string" ? settings.seed_color : "#6750A4";
+      typeof settings.seed_color === "string" ? settings.seed_color : "#446b9e";
     if (!stored("appearance"))
       appearance = ["system", "light", "dark"].includes(
         settings.default_appearance || "",
@@ -248,11 +233,12 @@ function meter(label: string, value: number | undefined, detail: string) {
     <div>
       <span>${label}</span><span>${value == null ? "—" : pct(value)}</span>
     </div>
-    <md-linear-progress
+    <progress
+      max="1"
       aria-label=${`${label}使用率`}
       .value=${value == null ? 0 : Math.max(0, Math.min(1, value / 100))}
       class=${value != null && value > 90 ? "critical" : ""}
-    ></md-linear-progress
+    ></progress
     ><small>${detail}</small>
   </div>`;
 }
@@ -265,7 +251,6 @@ function nodeCard(n: NodeInfo) {
     diskTotal = r?.disk_total || n.disk_total || 0;
   return html`<article class="node-card km-node-card">
     <div class="node-heading">
-      <div class="node-avatar">${icon("server")}</div>
       <div class="node-name">
         <h3>${n.name}</h3>
         <span
@@ -299,11 +284,14 @@ function nodeCard(n: NodeInfo) {
     <div class="card-bottom">
       <span
         >${settings.show_uptime !== false ? `运行 ${show ? duration(r.uptime) : "—"}` : n.group || ""}</span
-      ><md-text-button
+      ><button
+        type="button"
+        class="text-button"
         @click=${() => openNode(n.uuid)}
         aria-label=${`查看 ${n.name} 详情`}
-        >查看详情 ${icon("chevron")}</md-text-button
       >
+        查看详情 ${icon("chevron")}
+      </button>
     </div>
   </article>`;
 }
@@ -326,28 +314,33 @@ function overviewContent() {
   return html`<div class="page-heading">
       <div>
         <h1>${settings.headline || "服务器概览"}</h1>
-        <p>${settings.description || "所有节点的运行状态，尽在一处。"}</p>
+        ${settings.description && settings.description !== "所有节点的运行状态，尽在一处。" ? html`<p>${settings.description}</p>` : nothing}
       </div>
-      <md-outlined-button aria-label="重新连接" @click=${boot}
-        >${icon("refresh")}<span>重新连接</span></md-outlined-button
+      <button
+        type="button"
+        class="soft-button"
+        aria-label="重新连接"
+        @click=${boot}
       >
+        ${icon("refresh")}<span>重新连接</span>
+      </button>
     </div>
     <section class="summary" aria-label="节点统计">
       ${stat("在线节点", connected ? `${active.length} / ${nodes.length}` : "—", connected ? `${nodes.length - active.length} 个离线` : "等待实时连接")}${stat("平均 CPU", connected && active.length ? pct(active.reduce((s, n) => s + (reports[n.uuid]?.cpu || 0), 0) / active.length) : "—", "在线节点使用率")}${stat("总下载", connected ? bytes(active.reduce((s, n) => s + (reports[n.uuid]?.net_in || 0), 0)) + "/s" : "—", "实时入站速率")}${stat("总上传", connected ? bytes(active.reduce((s, n) => s + (reports[n.uuid]?.net_out || 0), 0)) + "/s" : "—", "实时出站速率")}
     </section>
     <div class="list-toolbar">
-      <md-outlined-text-field
-        class="search"
-        label="搜索节点"
-        type="search"
-        name="search"
-        .value=${query}
-        @input=${(e: Event) => {
-          query = (e.target as HTMLInputElement).value;
-          draw();
-        }}
-        >${icon("search")}</md-outlined-text-field
-      >
+      <label class="field search"
+        ><span>搜索节点</span
+        ><input
+          type="search"
+          placeholder="搜索节点"
+          name="search"
+          .value=${query}
+          @input=${(e: Event) => {
+            query = (e.target as HTMLInputElement).value;
+            draw();
+          }}
+      /></label>
       <div class="segments" role="group" aria-label="在线状态筛选">
         ${[
           ["all", "全部"],
@@ -363,35 +356,37 @@ function overviewContent() {
                 draw();
               }}
             >
-              ${filter === v ? icon("check") : nothing}${t}<md-ripple
-              ></md-ripple>
+              ${filter === v ? icon("check") : nothing}${t}
             </button>`,
         )}
       </div>
     </div>
     ${
       groups.length > 1
-        ? html`<md-chip-set aria-label="节点分组"
-            ><md-filter-chip
-              label="所有分组"
-              ?selected=${!group}
+        ? html`<div class="group-chips" role="group" aria-label="节点分组">
+            <button
+              type="button"
+              aria-pressed=${!group}
               @click=${() => {
                 group = "";
                 draw();
               }}
-            ></md-filter-chip
+            >
+              所有分组</button
             >${groups.map(
               (g) =>
-                html`<md-filter-chip
-                  .label=${g}
-                  ?selected=${group === g}
+                html`<button
+                  type="button"
+                  aria-pressed=${group === g}
                   @click=${() => {
                     group = group === g ? "" : g;
                     draw();
                   }}
-                ></md-filter-chip>`,
-            )}</md-chip-set
-          >`
+                >
+                  ${g}
+                </button>`,
+            )}
+          </div>`
         : nothing
     }
     <div class="section-label">
@@ -414,15 +409,18 @@ function overviewContent() {
             </p>
             ${
               nodes.length
-                ? html`<md-text-button
+                ? html`<button
+                    type="button"
+                    class="text-button"
                     @click=${() => {
                       query = "";
                       group = "";
                       filter = "all";
                       draw();
                     }}
-                    >清除筛选</md-text-button
-                  >`
+                  >
+                    清除筛选
+                  </button>`
                 : nothing
             }
           </section>`
@@ -468,9 +466,9 @@ async function fetchHistory() {
 function detailContent(n: NodeInfo) {
   const r = reports[n.uuid],
     on = isOnline(n.uuid);
-  return html`<md-text-button class="back" @click=${overview}
-      >${icon("back")} 返回概览</md-text-button
-    >
+  return html`<button type="button" class="text-button back" @click=${overview}>
+      ${icon("back")} 返回概览
+    </button>
     <div class="page-heading">
       <div>
         <div class="title-line">
@@ -484,15 +482,17 @@ function detailContent(n: NodeInfo) {
           ${flag(n.region)} ${n.region || "地区未知"} · ${n.group || "未分组"}
         </p>
       </div>
-      <md-outlined-select
-        label="历史范围"
+      <select
+        name="hours"
+        aria-label="历史范围"
         .value=${String(hours)}
         @change=${(e: Event) => {
           hours = Number((e.target as HTMLSelectElement).value);
           void fetchHistory();
         }}
-        >${[1, 4, 12, 24].map((h) => html`<md-select-option value=${String(h)}><div slot="headline">最近 ${h} 小时</div></md-select-option>`)}</md-outlined-select
       >
+        ${[1, 4, 12, 24].map((h) => html`<option value=${String(h)}>最近 ${h} 小时</option>`)}
+      </select>
     </div>
     <section class="summary">
       ${stat("CPU", on && r ? pct(r.cpu) : "—", n.cpu_name || "处理器")}${stat("内存", on && r ? bytes(r.ram) : "—", `${bytes(n.mem_total)} 总容量`)}${stat("运行时间", on && r ? duration(r.uptime) : "—", "自最近一次启动")}${stat("负载", on && r ? String(r.load) : "—", "1 分钟平均负载")}
@@ -522,14 +522,15 @@ function detailContent(n: NodeInfo) {
     ${
       historyLoading
         ? html`<div class="history-loading">
-            <md-linear-progress
+            <progress
+              max="1"
               indeterminate
               aria-label="加载历史记录"
-            ></md-linear-progress>
+            ></progress>
             <p>正在加载历史记录…</p>
           </div>`
-        : html` ${historyError ? html`<div class="notice error">${icon("error")}<span>负载历史：${historyError}</span><md-text-button @click=${fetchHistory}>重试</md-text-button></div>` : nothing}
-            ${pingError ? html`<div class="notice error">${icon("error")}<span>延迟历史：${pingError}</span><md-text-button @click=${fetchHistory}>重试</md-text-button></div>` : nothing}
+        : html` ${historyError ? html`<div class="notice error">${icon("error")}<span>负载历史：${historyError}</span><button type="button" class="text-button" @click=${fetchHistory}>重试</button></div>` : nothing}
+            ${pingError ? html`<div class="notice error">${icon("error")}<span>延迟历史：${pingError}</span><button type="button" class="text-button" @click=${fetchHistory}>重试</button></div>` : nothing}
             <div class="chart-grid">
               ${chartPanel("CPU 与内存", "load-chart", loadRecords.length > 0, "百分比 · 内存使用率按记录总量计算")}${chartPanel("网络速率", "network-chart", loadRecords.length > 0, "下载与上传 · KiB/s")}${chartPanel("延迟监测", "ping-chart", pingRecords.length > 0, "公开 Ping 任务 · ms")}
             </div>`
@@ -548,7 +549,10 @@ function chartPanel(
   </section>`;
 }
 function settingsContent() {
-  return html`<md-text-button class="back" @click=${overview}>${icon("back")} 返回概览</md-text-button><div class="page-heading">
+  return html`<button type="button" class="text-button back" @click=${overview}>
+      ${icon("back")} 返回概览
+    </button>
+    <div class="page-heading">
       <div>
         <h1>外观</h1>
         <p>选择适合你的显示方式，设置仅保存在当前浏览器。</p>
@@ -576,53 +580,57 @@ function settingsContent() {
       </div>
       <div class="preference-row">
         <div>
-          <h2>Material Design 3</h2>
-          <p>官方 Material Web 组件与动态色彩，主题主色由站点管理员设置。</p>
+          <h2>新拟态</h2>
+          <p>柔和的浮起表面与内凹控件，主色由站点管理员设置。</p>
         </div>
         <span
           class="color-swatch"
-          style=${`background:var(--md-sys-color-primary)`}
+          style=${`background:var(--color-primary)`}
         ></span>
       </div>
       <div class="preference-row">
         <div>
           <h2>主题版本</h2>
-          <p>Komari MD3 · 0.1.1</p>
+          <p>Komari Neumorph · 0.2.0</p>
         </div>
-        <md-text-button
+        <a
+          class="text-button"
           href="https://github.com/Rainy-C/komari-MD3"
           target="_blank"
           rel="noopener"
-          >源代码</md-text-button
+          >源代码</a
         >
       </div>
     </section>`;
 }
 function login() {
-  return html`<md-dialog
+  return html`<dialog
     id="login"
     aria-label="登录站点"
     @cancel=${() => {
       loginOpen = false;
       draw();
     }}
-    ><div slot="headline" class="dialog-heading">
+  >
+    <div class="dialog-heading">
       <span>登录站点</span
-      ><md-icon-button
+      ><button
+        class="icon-button"
         type="button"
         aria-label="关闭登录"
         @click=${() => setLogin(false)}
-        >${icon("close")}</md-icon-button
       >
+        ${icon("close")}
+      </button>
     </div>
-    <form slot="content" @submit=${submitLogin}>
+    <form @submit=${submitLogin}>
       <p>使用 Komari 账号访问私有监控数据。</p>
-      ${passwordEnabled ? html`<md-outlined-text-field label="用户名" name="username" autocomplete="username" autofocus required></md-outlined-text-field><md-outlined-text-field label="密码" name="password" type="password" autocomplete="current-password" required></md-outlined-text-field><md-outlined-text-field label="两步验证码（如已启用）" name="2fa_code" inputmode="numeric" autocomplete="one-time-code"></md-outlined-text-field>` : nothing}${loginError ? html`<p class="form-error" role="alert">${loginError}</p>` : nothing}
+      ${passwordEnabled ? html`<label class="field "><span>用户名</span><input name="username" autocomplete="username" autofocus required /></label><label class="field "><span>密码</span><input name="password" type="password" autocomplete="current-password" required /></label><label class="field "><span>两步验证码（如已启用）</span><input name="2fa_code" inputmode="numeric" autocomplete="one-time-code" /></label>` : nothing}${loginError ? html`<p class="form-error" role="alert">${loginError}</p>` : nothing}
       <div class="dialog-actions">
-        ${oauthEnabled ? html`<md-outlined-button type="button" href="/api/oauth">单点登录</md-outlined-button>` : nothing}${passwordEnabled ? html`<md-filled-button type="submit" ?disabled=${loginBusy}>${loginBusy ? "登录中…" : "登录"}</md-filled-button>` : nothing}${!passwordEnabled && !oauthEnabled ? html`<p>密码登录已关闭，请通过管理员配置的登录入口访问。</p>` : nothing}
+        ${oauthEnabled ? html`<a class="soft-button" type="button" href="/api/oauth">单点登录</a>` : nothing}${passwordEnabled ? html`<button class="primary-button" type="submit" ?disabled=${loginBusy}>${loginBusy ? "登录中…" : "登录"}</button>` : nothing}${!passwordEnabled && !oauthEnabled ? html`<p>密码登录已关闭，请通过管理员配置的登录入口访问。</p>` : nothing}
       </div>
-    </form></md-dialog
-  >`;
+    </form>
+  </dialog>`;
 }
 async function submitLogin(e: Event) {
   e.preventDefault();
@@ -661,16 +669,20 @@ function draw() {
       >
       <header class="topbar km-navbar">
         <a class="brand" href="/" aria-label="Komari 首页"
-          ><span class="brand-mark">${icon("server")}</span
           ><span>${siteTitle}</span><span class="brand-label">Monitor</span></a
         >
         <div class="top-actions">
           <span class="live-label" role="status"
             ><i class=${isFresh() ? "live-dot" : "waiting-dot"}></i
             >${({ live: "实时更新", connecting: "连接中", retrying: "重连中", paused: "已暂停", error: "数据异常" } as Record<string, string>)[connection] || "连接中"}</span
-          ><md-icon-button aria-label="外观设置" @click=${preferences}
-            >${icon(appearance === "dark" ? "moon" : "sun")}</md-icon-button
-          >${loggedIn ? html`<md-text-button href="/admin">管理后台</md-text-button>` : html`<md-text-button @click=${() => setLogin(true)}>登录</md-text-button>`}
+          ><button
+            type="button"
+            class="icon-button"
+            aria-label="外观设置"
+            @click=${preferences}
+          >
+            ${icon(appearance === "dark" ? "moon" : "sun")}</button
+          >${loggedIn ? html`<a class="text-button" href="/admin">管理后台</a>` : html`<button type="button" class="text-button" @click=${() => setLogin(true)}>登录</button>`}
         </div>
       </header>
       <div class="layout km-layout">
@@ -678,10 +690,11 @@ function draw() {
           ${
             loading
               ? html`<section class="empty">
-                  <md-circular-progress
-                    indeterminate
+                  <span
+                    class="spinner"
+                    role="status"
                     aria-label="加载节点"
-                  ></md-circular-progress>
+                  ></span>
                   <h2>正在连接监控站点</h2>
                 </section>`
               : error
@@ -690,11 +703,20 @@ function draw() {
                     <h1>暂时无法查看节点</h1>
                     <p role="alert">${error}</p>
                     <div>
-                      <md-outlined-button aria-label="重新连接" @click=${boot}
-                        >重试</md-outlined-button
-                      ><md-filled-button @click=${() => setLogin(true)}
-                        >登录</md-filled-button
+                      <button
+                        type="button"
+                        class="soft-button"
+                        aria-label="重新连接"
+                        @click=${boot}
                       >
+                        重试</button
+                      ><button
+                        type="button"
+                        class="primary-button"
+                        @click=${() => setLogin(true)}
+                      >
+                        登录
+                      </button>
                     </div>
                   </section>`
                 : html`${!isFresh() ? html`<div class="notice" role="status">${icon("refresh")}<span>实时连接${connection === "paused" ? "已暂停" : "尚未就绪"}，节点状态暂不可确认。${lastUpdate ? "上次更新 " + new Date(lastUpdate).toLocaleTimeString("zh-CN") : ""}</span></div>` : nothing}${
@@ -703,9 +725,13 @@ function draw() {
                       : selected && !n
                         ? html`<section class="empty">
                             <h1>节点不存在或不可见</h1>
-                            <md-text-button @click=${overview}
-                              >返回概览</md-text-button
+                            <button
+                              type="button"
+                              class="text-button"
+                              @click=${overview}
                             >
+                              返回概览
+                            </button>
                           </section>`
                         : n
                           ? detailContent(n)
@@ -718,7 +744,7 @@ function draw() {
               target="_blank"
               rel="noopener"
               >Powered by Komari Monitor.</a
-            ><span>Material Design 3 · Rainy-C</span>
+            ><span>Neumorph · Rainy-C</span>
           </footer>
         </main>
       </div>
@@ -739,8 +765,7 @@ function drawCharts() {
   if (canvases.every((c) => !c || Chart.getChart(c))) return;
   charts.splice(0).forEach((c) => c.destroy());
   const css = getComputedStyle(document.documentElement),
-    color = (role: string) =>
-      css.getPropertyValue("--md-sys-color-" + role).trim();
+    color = (role: string) => css.getPropertyValue("--color-" + role).trim();
   const palette = [
     color("primary"),
     color("tertiary"),

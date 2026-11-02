@@ -1,8 +1,6 @@
-# Komari MD3
+# Komari Neumorph
 
-基于 Google 官方 **Material Web** 组件的 Komari Material Design 3 主题。
-
-使用 Material Color Utilities 的 Tonal Spot 动态色彩方案，提供完整浅色、深色与跟随系统外观。字体、图标及脚本均随主题打包，无需访问外部 CDN。
+轻量的新拟态 Komari 主题。柔和浮起卡片、内凹输入框与筛选按钮，支持浅色与深色，无底部导航。
 
 ## 功能
 
@@ -12,13 +10,13 @@
 - WebSocket 定时刷新、退避重连、过期连接提示；离线数据不冒充实时值。
 - 私有站点密码登录、两步验证码与 OAuth 入口。
 - 统一顶部工具栏，键盘焦点、减少动态效果偏好。
-- 后台托管设置：种子色、首页文案、默认外观、流量及运行时间显示、刷新间隔。
+- 后台托管设置：强调色、首页文案、默认外观、流量及运行时间显示、刷新间隔。
 
 ## 安装
 
-1. 打开本仓库 **Actions → Build MD3 theme**，选择最近成功的一次运行。
-2. 下载 **komari-MD3-installable**，解压外层工作流产物包。
-3. 在 Komari 后台主题管理中上传里面的 **komari-MD3-v0.1.1.zip** 并启用。
+1. 打开本仓库 **Actions → Build Neumorph theme**，选择最近成功的一次运行。
+2. 下载 **komari-Neumorph-installable**，解压外层工作流产物包。
+3. 在 Komari 后台主题管理中上传里面的 **komari-Neumorph-v0.2.0.zip** 并启用。
 
 主题 ZIP 根目录直接包含 `komari-theme.json` 与 `dist/`。请勿上传 GitHub 自动生成的源码 ZIP 或外层 Actions 产物 ZIP。
 
@@ -46,10 +44,11 @@ npx playwright test
 
 ## 技术
 
-TypeScript · Lit · Vite · Material Web · Material Color Utilities · Chart.js
+TypeScript · Lit · Vite · 原生 HTML 控件 · Chart.js
 
 - [Komari](https://github.com/komari-monitor/komari)
 - [主题开发文档](https://www.komari.wiki/dev/theme)
-- [Material Web](https://material-web.dev/)
 
 Powered by Komari Monitor.
+
+为兼容已有安装和后台主题设置，内部主题标识继续使用 `MD3`；界面与组件实现已经切换为新拟态。

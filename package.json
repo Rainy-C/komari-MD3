@@ -1,6 +1,6 @@
 {
-  "name": "komari-md3",
-  "version": "0.1.1",
+  "name": "komari-neumorph",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,8 +12,6 @@
   "dependencies": {
     "@fontsource/roboto": "^5.2.0",
     "@material-design-icons/svg": "^0.14.0",
-    "@material/material-color-utilities": "^0.3.0",
-    "@material/web": "^2.4.1",
     "chart.js": "^4.5.0",
     "lit": "^3.3.0"
   },

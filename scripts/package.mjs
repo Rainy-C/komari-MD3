@@ -27,7 +27,7 @@ for (const required of [
 if (!html.includes("/themes/MD3/dist/assets/"))
   throw Error("Incorrect theme asset base");
 await mkdir("release", { recursive: true });
-const filename = `komari-MD3-v${manifest.version}.zip`;
+const filename = `komari-Neumorph-v${manifest.version}.zip`;
 const zip = zipSync(files, { level: 9 });
 await writeFile(`release/${filename}`, zip);
 await writeFile(
