@@ -328,7 +328,7 @@ function overviewContent() {
         <h1>${settings.headline || "服务器概览"}</h1>
         <p>${settings.description || "所有节点的运行状态，尽在一处。"}</p>
       </div>
-      <md-outlined-button @click=${boot}
+      <md-outlined-button aria-label="重新连接" @click=${boot}
         >${icon("refresh")}<span>重新连接</span></md-outlined-button
       >
     </div>
@@ -711,7 +711,7 @@ function draw() {
                     <h1>暂时无法查看节点</h1>
                     <p role="alert">${error}</p>
                     <div>
-                      <md-outlined-button @click=${boot}
+                      <md-outlined-button aria-label="重新连接" @click=${boot}
                         >重试</md-outlined-button
                       ><md-filled-button @click=${() => setLogin(true)}
                         >登录</md-filled-button

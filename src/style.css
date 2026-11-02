@@ -884,7 +884,7 @@ md-dialog:not([open]) {
     --md-outlined-button-leading-space: 12px;
     --md-outlined-button-trailing-space: 12px;
   }
-  .page-heading > md-outlined-button span {
+  .page-heading > md-outlined-button span:not(.icon) {
     display: none;
   }
   .summary {

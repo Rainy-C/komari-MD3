@@ -212,6 +212,7 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
 test("WCAG light and dark", async ({ page }, info) => {
   await setup(page);
   for (const mode of ["light", "dark"]) {
+    await page.setViewportSize({width:mode==="light"?1280:390,height:900});
     await page.getByRole("button", { name: "外观", exact: true }).click();
     await page
       .getByRole("button", {
