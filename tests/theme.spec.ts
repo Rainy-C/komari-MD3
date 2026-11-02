@@ -157,6 +157,7 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
   await page.setViewportSize({ width: 1440, height: 1000 });
   await setup(page);
   await expect(page.locator(".node-card")).toHaveCount(3);
+  await expect(page.locator(".navigation")).toHaveCount(0);
   await expect(page.locator(".online")).toHaveCount(2);
   await page.screenshot({
     path: info.outputPath("desktop-light.png"),
@@ -184,10 +185,10 @@ test("desktop and mobile: filters, details, theme persistence, no overflow or ru
     fullPage: true,
   });
   await page.getByRole("button", { name: "返回概览" }).click();
-  await page.getByRole("button", { name: "外观", exact: true }).click();
+  await page.getByRole("button", { name: "外观设置", exact: true }).click();
   await page.getByRole("button", { name: "深色", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
-  await page.getByRole("button", { name: "概览", exact: true }).click();
+  await page.getByRole("button", { name: "返回概览", exact: true }).click();
   await page.screenshot({
     path: info.outputPath("desktop-dark.png"),
     fullPage: true,
@@ -213,14 +214,14 @@ test("WCAG light and dark", async ({ page }, info) => {
   await setup(page);
   for (const mode of ["light", "dark"]) {
     await page.setViewportSize({width:mode==="light"?1280:390,height:900});
-    await page.getByRole("button", { name: "外观", exact: true }).click();
+    await page.getByRole("button", { name: "外观设置", exact: true }).click();
     await page
       .getByRole("button", {
         name: mode === "light" ? "浅色" : "深色",
         exact: true,
       })
       .click();
-    await page.getByRole("button", { name: "概览", exact: true }).click();
+    await page.getByRole("button", { name: "返回概览", exact: true }).click();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();

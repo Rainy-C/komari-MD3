@@ -548,7 +548,7 @@ function chartPanel(
   </section>`;
 }
 function settingsContent() {
-  return html`<div class="page-heading">
+  return html`<md-text-button class="back" @click=${overview}>${icon("back")} 返回概览</md-text-button><div class="page-heading">
       <div>
         <h1>外观</h1>
         <p>选择适合你的显示方式，设置仅保存在当前浏览器。</p>
@@ -587,7 +587,7 @@ function settingsContent() {
       <div class="preference-row">
         <div>
           <h2>主题版本</h2>
-          <p>Komari MD3 · 0.1.0</p>
+          <p>Komari MD3 · 0.1.1</p>
         </div>
         <md-text-button
           href="https://github.com/Rainy-C/komari-MD3"
@@ -674,27 +674,6 @@ function draw() {
         </div>
       </header>
       <div class="layout km-layout">
-        <nav class="navigation" aria-label="主导航">
-          <button
-            type="button"
-            class=${page === "overview" ? "active" : ""}
-            aria-current=${page === "overview" ? "page" : nothing}
-            @click=${overview}
-          >
-            <span>${icon("dashboard")}</span><span>概览</span
-            ><md-ripple></md-ripple></button
-          ><button
-            type="button"
-            class=${page === "settings" ? "active" : ""}
-            aria-current=${page === "settings" ? "page" : nothing}
-            @click=${preferences}
-          >
-            <span>${icon("settings")}</span><span>外观</span
-            ><md-ripple></md-ripple></button
-          ><a href="/admin" aria-label="管理后台"
-            ><span>${icon("admin")}</span><span>管理</span></a
-          >
-        </nav>
         <main id="main" class="km-main" tabindex="-1">
           ${
             loading

@@ -8,7 +8,7 @@
     "zh-CN": "基于 Google 官方 Material Web 组件的 Material Design 3 监控主题",
     "en": "A Material Design 3 monitor theme built with Google's Material Web components"
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Rainy-C",
   "url": "https://github.com/Rainy-C/komari-MD3",
   "configuration": {
@@ -16,7 +16,10 @@
     "icon": "Palette",
     "name": "MD3 主题设置",
     "data": [
-      { "name": "外观与内容", "type": "title" },
+      {
+        "name": "外观与内容",
+        "type": "title"
+      },
       {
         "key": "seed_color",
         "name": "主题种子色",
